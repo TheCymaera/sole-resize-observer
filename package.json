@@ -1,0 +1,32 @@
+{
+	"name": "sole-resize-observer",
+	"version": "1.0.0",
+	"description": "A library for reusing resize observers",
+	"main": "dst/index.js",
+	"type": "module",
+	"files": ["dst/**"],
+	"scripts": {
+		"build": "tsc -p tsconfig.json",
+		"build-watch": "tsc -p tsconfig.json --watch"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/TheCymaera/sole-resize-observer.git"
+	},
+	"keywords": [
+		"resize",
+		"observer",
+		"observers",
+		"single",
+		"singleton",
+		"sole",
+		"reuse",
+		"pool"
+	],
+	"author": "Cymaera",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/TheCymaera/sole-resize-observer/issues"
+	},
+	"homepage": "https://github.com/TheCymaera/sole-resize-observer#readme"
+}

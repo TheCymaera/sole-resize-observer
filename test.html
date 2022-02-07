@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Sole Resize Observer</title>
+</head>
+<body>
+	<div style="position: relative; height: 200px;">
+		<div id="single" class="resizable" style="position: absolute; left: 0px;">
+			<div>single</div>
+			<span id="single_width"></span>, <span id="single_height"></span>
+		</div>
+
+		<div id="double" class="resizable" style="position: absolute; left: 150px;">
+			<div>double</div>
+			<span id="double_width"></span>, <span id="double_height"></span>
+		</div>
+	</div>
+
+	<hr />
+	
+	Observed: <input type="checkbox" id="toggle" /> <br/>
+
+	<br/>
+	<div id="diagnostics1" style="white-space: pre;"></div> <br/>
+
+	<hr />
+	<button id="testGarbageCollection">Create and destroy element without unobserving</button> <br/>
+	<br/>
+	<div id="diagnostics2" style="white-space: pre;"></div>
+	<br/>
+	This should reset to 0.<br/>
+	You can force garbage collection in DevTools > Memory
+	<span></spans>
+</body>
+<style>
+.resizable {
+	width: 100px;
+	height: 100px;
+	border: 1px solid black;
+	resize: both;
+	overflow: hidden;
+}
+body[data-disabled] .resizable {
+	border-color: red;
+}
+</style>
+<script type="module">
+import { soleResizeObserver, SoleResizeObserver } from "./dst/index.js";
+
+console.log("See window.soleResizeObserver for debugging.")
+window["soleResizeObserver"] = soleResizeObserver;
+window["SoleResizeObserver"] = SoleResizeObserver;
+
+const single_callback = (element)=>{
+	single_width.textContent = element.clientWidth;
+	single_height.textContent = element.clientHeight;
+}
+
+const double_callback1 = (element)=>{
+	double_width.textContent = element.clientWidth;
+}
+
+const double_callback2 = (element)=>{
+	double_height.textContent = element.clientHeight;
+}
+
+toggle.onchange = ()=>{
+	document.body.toggleAttribute("data-disabled", !toggle.checked);
+	if (toggle.checked) {
+		soleResizeObserver.addListener(single, single_callback);
+		soleResizeObserver.addListener(double, double_callback1);
+		soleResizeObserver.addListener(double, double_callback2);
+	} else {
+		soleResizeObserver.removeListener(single, single_callback);
+		soleResizeObserver.removeListener(double, double_callback1);
+		soleResizeObserver.removeListener(double, double_callback2);
+	}
+
+	diagnostics1.textContent =
+	`Observations for "single": ${(soleResizeObserver._callbacks.get(single)?.size ?? 0)}\n`+
+	`Observations for "double": ${(soleResizeObserver._callbacks.get(double)?.size ?? 0)}`;
+}
+toggle.checked = true;
+toggle.onchange();
+
+testGarbageCollection.onclick = ()=>{
+	if (!window["WeakRef"]) alert(`WeakRef is not supported in this environment.`);
+
+	const element = document.createElement(`to-be-removed`);
+	weakRefs.add(new WeakRef(element));
+	soleResizeObserver.addListener(element, ()=>undefined);
+};
+
+const weakRefs = new Set();
+setInterval(()=>{
+	for (const ref of weakRefs) {
+		const element = ref.deref();
+		if (!element) weakRefs.delete(ref);
+	}
+	
+	diagnostics2.textContent = `Observations: ${weakRefs.size}`;
+}, 10);
+</script>
+
+</html>
